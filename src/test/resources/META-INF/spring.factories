@@ -1,0 +1,4 @@
+org.springframework.test.context.ContextCustomizerFactory = \
+    ar.edu.um.prog2.turnosyreservas.config.\
+    SqlTestContainersSpringContextCustomizerFactory,ar.edu.um.prog2.\
+    turnosyreservas.config.KafkaTestContainersSpringContextCustomizerFactory
