@@ -1,0 +1,11 @@
+id;external_reservation_id;professional_id;professional_first_name;professional_last_name;appointment_date;start_time;end_time;patient_first_name;patient_last_name;patient_phone;status;created_at;confirmed_at;cancelled_at;cancellation_reason;process_id;user_id
+1;24796;20311;as deeply;extract sharply;2026-10-07;till tho;hm zowie;whoever fatally;athwart where;other phooey finer;FAILED;2026-10-07T14:25:27;2026-10-07T05:03:51;2026-10-07T00:29:04;programme filthy woot;1;1
+2;21259;18112;closely actually;consequently concerning other;2026-10-07;when per;save;deceivingly;now;gosh ill which;CANCELLED;2026-10-07T21:25:55;2026-10-07T21:38:40;2026-10-07T04:52:55;atop;2;2
+3;21959;17445;blah;boohoo scrap;2026-10-07;wearily;eek sole;weighty comb sternly;poorly sanity miscalculate;gosh;FAILED;2026-10-07T09:49:16;2026-10-07T09:37:04;2026-10-07T22:56:42;duh inasmuch;3;1
+4;13327;11140;bidet;quaff;2026-10-07;giving;depend;consequently although never;hastily zealous;when um daintily;CANCELLED;2026-10-07T07:17:13;2026-10-07T01:41:55;2026-10-07T21:23:19;embalm as;4;1
+5;17992;16613;anenst;legislature;2026-10-07;until at;fantasti;reservation what;once during randomize;loyally times;CONFIRMED;2026-10-07T08:10:04;2026-10-07T02:20:07;2026-10-07T07:35:39;soupy unto anguished;5;2
+6;11609;4470;and;next;2026-10-07;thoughtf;fixed wa;phew;bravely nor;that draw hence;FAILED;2026-10-07T03:11:36;2026-10-07T19:35:19;2026-10-07T18:55:16;queasily straight hydrolyze;6;1
+7;20194;29926;yum;eek;2026-10-07;husky co;ouch man;climb flawed now;wetly throughout once;whoever;FAILED;2026-10-07T13:58:56;2026-10-07T00:26:32;2026-10-07T20:19:31;terrible upright poorly;7;1
+8;9856;15016;um furlough consign;noted;2026-10-07;downchan;staid fo;whether;youthfully;likewise;FAILED;2026-10-07T06:19:17;2026-10-07T17:00:46;2026-10-07T21:22:34;only onto;8;1
+9;23436;3466;ravel towards;eek;2026-10-07;fooey;who plus;inside;vice;hmph;FAILED;2026-10-07T01:31:35;2026-10-07T15:21:35;2026-10-07T05:04:54;ouch treble;9;2
+10;14001;26839;championship endow er;pessimistic even parsnip;2026-10-07;furtherm;or respr;pish militate throughout;hexagon;reboot acidic attrac;CANCELLED;2026-10-07T19:42:57;2026-10-07T01:45:26;2026-10-07T04:14:08;ruin remark against;10;1

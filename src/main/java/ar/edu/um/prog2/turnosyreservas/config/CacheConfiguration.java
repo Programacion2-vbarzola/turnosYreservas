@@ -37,6 +37,10 @@ public class CacheConfiguration {
             createCache(cm, ar.edu.um.prog2.turnosyreservas.repository.UserRepository.USERS_BY_LOGIN_CACHE);
             createCache(cm, ar.edu.um.prog2.turnosyreservas.repository.UserRepository.USERS_BY_EMAIL_CACHE);
             createCache(cm, ar.edu.um.prog2.turnosyreservas.domain.Authority.class.getName());
+            createCache(cm, ar.edu.um.prog2.turnosyreservas.domain.UserProfile.class.getName());
+            createCache(cm, ar.edu.um.prog2.turnosyreservas.domain.Hold.class.getName());
+            createCache(cm, ar.edu.um.prog2.turnosyreservas.domain.ReservationProcess.class.getName());
+            createCache(cm, ar.edu.um.prog2.turnosyreservas.domain.Reservation.class.getName());
             // jhipster-needle-caffeine-add-entry
         };
     }

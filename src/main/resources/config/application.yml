@@ -97,24 +97,21 @@ spring:
     name: turnosYreservas
   cloud:
     function:
-      definition: kafkaConsumer;kafkaProducer
+      definition: appointmentActionsConsumer;phoneSubmittedProducer
     stream:
       kafka:
         binder:
           replicationFactor: 1
-          auto-create-topics: true
-          brokers: localhost:9092
+          auto-create-topics: false
+          brokers: ${CATEDRA_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
       bindings:
-        binding-out-0:
-          content-type: text/plain
-          group: turnos-yreservas
-        kafkaConsumer-in-0:
-          destination: sse-topic
-          content-type: text/plain
-          group: turnos-yreservas
-        kafkaProducer-out-0:
-          content-type: text/plain
-          group: turnos-yreservas
+        appointmentActionsConsumer-in-0:
+          destination: ${KAFKA_TOPIC_APPOINTMENT_ACTIONS:alumnos.turnos.acciones.changeme}
+          group: ${KAFKA_CONSUMER_GROUP:changeme}
+          content-type: application/json
+        phoneSubmittedProducer-out-0:
+          destination: ${KAFKA_TOPIC_PHONE:catedra.turnos.telefono.changeme}
+          content-type: application/json
   docker:
     compose:
       enabled: true
@@ -247,4 +244,7 @@ jhipster:
 # https://www.jhipster.tech/common-application-properties/
 # ===================================================================
 
-# application:
+catedra:
+  api:
+    base-url: ${CATEDRA_API_URL:http://localhost:9090}
+    jwt: ${CATEDRA_JWT:changeme}

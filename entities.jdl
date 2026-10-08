@@ -1,0 +1,118 @@
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum HoldStatus {
+    HELD, EXPIRED, CANCELLED
+}
+
+enum ProcessStatus {
+    HELD,
+    WAITING_FOR_PHONE,
+    PHONE_REQUESTED,
+    PHONE_SUBMITTED,
+    CONFIRMED,
+    REJECTED,
+    EXPIRED,
+    INVALID,
+    CANCELLED,
+    FAILED
+}
+
+enum ReservationStatus {
+    CONFIRMED, CANCELLED, FAILED
+}
+
+// ─────────────────────────────────────────────
+// ENTITIES
+// ─────────────────────────────────────────────
+
+// Extiende el User de JHipster con el identificador estable
+// que se envía a cátedra como externalPatientId.
+// Se genera como UUID al registrar el usuario y nunca cambia.
+entity UserProfile {
+    externalPatientId String required unique maxlength(100)
+}
+
+// Representa el bloqueo temporal creado en cátedra.
+// externalHoldId y externalProcessId vienen de la respuesta
+// de POST /api/appointment-holds de cátedra.
+entity Hold {
+    externalHoldId    String     required unique maxlength(100)
+    externalProcessId String     required unique maxlength(100)
+    professionalId    Long       required
+    date              LocalDate  required
+    startTime         String     required maxlength(8)
+    endTime           String              maxlength(8)
+    status            HoldStatus required
+    expiresAt         Instant    required
+    createdAt         Instant    required
+}
+
+// Máquina de estados local del proceso de reserva.
+// requestEventId se guarda al recibir AdditionalInformationRequested
+// para reenviarlo en AdditionalInformationSubmitted.
+entity ReservationProcess {
+    externalProcessId String        required unique maxlength(100)
+    professionalId    Long          required
+    date              LocalDate     required
+    startTime         String        required maxlength(8)
+    patientFirstName  String        required maxlength(100)
+    patientLastName   String        required maxlength(100)
+    status            ProcessStatus required
+    expiresAt         Instant
+    requestEventId    String                 maxlength(200)
+    phoneNumber       String                 maxlength(20)
+    createdAt         Instant       required
+    updatedAt         Instant       required
+}
+
+// Reserva confirmada. Almacena datos históricos del profesional
+// para mostrar al usuario sin depender del catálogo vigente.
+// externalReservationId viene de AppointmentConfirmed (reservationId).
+entity Reservation {
+    externalReservationId Long
+    professionalId        Long              required
+    professionalFirstName String                     maxlength(100)
+    professionalLastName  String                     maxlength(100)
+    appointmentDate       LocalDate         required
+    startTime             String            required maxlength(8)
+    endTime               String                     maxlength(8)
+    patientFirstName      String            required maxlength(100)
+    patientLastName       String            required maxlength(100)
+    patientPhone          String                     maxlength(20)
+    status                ReservationStatus required
+    createdAt             Instant           required
+    confirmedAt           Instant
+    cancelledAt           Instant
+    cancellationReason    String                     maxlength(500)
+}
+
+// ─────────────────────────────────────────────
+// RELATIONSHIPS
+// ─────────────────────────────────────────────
+
+relationship OneToOne {
+    // Cada usuario tiene exactamente un perfil extendido
+    UserProfile{user(login) required} to User with builtInEntity
+
+    // Un hold da origen a exactamente un proceso
+    ReservationProcess{hold required} to Hold
+
+    // Un proceso da origen a exactamente una reserva
+    Reservation{process required} to ReservationProcess
+}
+
+relationship ManyToOne {
+    Hold{user(login) required}               to User with builtInEntity
+    ReservationProcess{user(login) required} to User with builtInEntity
+    Reservation{user(login) required}        to User with builtInEntity
+}
+
+// ─────────────────────────────────────────────
+// OPTIONS
+// ─────────────────────────────────────────────
+
+service all with serviceImpl
+dto all with mapstruct
+paginate Reservation with pagination
