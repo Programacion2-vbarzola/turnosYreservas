@@ -1,6 +1,8 @@
 package ar.edu.um.prog2.turnosyreservas.web.rest;
 
 import ar.edu.um.prog2.turnosyreservas.domain.User;
+import ar.edu.um.prog2.turnosyreservas.domain.UserProfile;
+import ar.edu.um.prog2.turnosyreservas.repository.UserProfileRepository;
 import ar.edu.um.prog2.turnosyreservas.repository.UserRepository;
 import ar.edu.um.prog2.turnosyreservas.security.SecurityUtils;
 import ar.edu.um.prog2.turnosyreservas.service.MailService;
@@ -40,10 +42,18 @@ public class AccountResource {
 
     private final MailService mailService;
 
-    public AccountResource(UserRepository userRepository, UserService userService, MailService mailService) {
+    private final UserProfileRepository userProfileRepository;
+
+    public AccountResource(
+        UserRepository userRepository,
+        UserService userService,
+        MailService mailService,
+        UserProfileRepository userProfileRepository
+    ) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mailService = mailService;
+        this.userProfileRepository = userProfileRepository;
     }
 
     /**
@@ -61,7 +71,10 @@ public class AccountResource {
             throw new InvalidPasswordException();
         }
         User user = userService.registerUser(managedUserVM, managedUserVM.getPassword());
-        mailService.sendActivationEmail(user);
+        UserProfile profile = new UserProfile();
+        profile.setExternalPatientId(UUID.randomUUID().toString());
+        profile.setUser(user);
+        userProfileRepository.save(profile);
     }
 
     /**

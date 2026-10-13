@@ -13,10 +13,16 @@ public class ApplicationProperties {
 
     private final Liquibase liquibase = new Liquibase();
 
+    private final CatalogService catalogService = new CatalogService();
+
     // jhipster-needle-application-properties-property
 
     public Liquibase getLiquibase() {
         return liquibase;
+    }
+
+    public CatalogService getCatalogService() {
+        return catalogService;
     }
 
     // jhipster-needle-application-properties-property-getter
@@ -31,6 +37,28 @@ public class ApplicationProperties {
 
         public void setAsyncStart(Boolean asyncStart) {
             this.asyncStart = asyncStart;
+        }
+    }
+
+    public static class CatalogService {
+
+        private String baseUrl = "http://localhost:8081";
+        private String serviceJwt = "";
+
+        public String getBaseUrl() {
+            return baseUrl;
+        }
+
+        public void setBaseUrl(String baseUrl) {
+            this.baseUrl = baseUrl;
+        }
+
+        public String getServiceJwt() {
+            return serviceJwt;
+        }
+
+        public void setServiceJwt(String serviceJwt) {
+            this.serviceJwt = serviceJwt;
         }
     }
     // jhipster-needle-application-properties-property-class

@@ -20,7 +20,7 @@ public class AdminUserDTO implements Serializable {
 
     @NotBlank
     @Pattern(regexp = Constants.LOGIN_REGEX)
-    @Size(min = 1, max = 50)
+    @Size(min = 3, max = 50)
     private String login;
 
     @Size(max = 50)
@@ -29,6 +29,7 @@ public class AdminUserDTO implements Serializable {
     @Size(max = 50)
     private String lastName;
 
+    @NotBlank
     @Email
     @Size(min = 5, max = 254)
     private String email;

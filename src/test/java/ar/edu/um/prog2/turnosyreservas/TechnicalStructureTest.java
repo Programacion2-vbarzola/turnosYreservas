@@ -22,13 +22,17 @@ class TechnicalStructureTest {
         .layer("Security").definedBy("..security..")
         .optionalLayer("Persistence").definedBy("..repository..")
         .layer("Domain").definedBy("..domain..")
+        .optionalLayer("AdapterIn").definedBy("..adapter.in..")
+        .optionalLayer("AdapterOut").definedBy("..adapter.out..")
 
         .whereLayer("Config").mayNotBeAccessedByAnyLayer()
         .whereLayer("Web").mayOnlyBeAccessedByLayers("Config")
         .whereLayer("Service").mayOnlyBeAccessedByLayers("Web", "Config")
         .whereLayer("Security").mayOnlyBeAccessedByLayers("Config", "Service", "Web")
-        .whereLayer("Persistence").mayOnlyBeAccessedByLayers("Service", "Security", "Web", "Config")
-        .whereLayer("Domain").mayOnlyBeAccessedByLayers("Persistence", "Service", "Security", "Web", "Config")
+        .whereLayer("Persistence").mayOnlyBeAccessedByLayers("Service", "Security", "Web", "Config", "AdapterOut")
+        .whereLayer("Domain").mayOnlyBeAccessedByLayers("Persistence", "Service", "Security", "Web", "Config", "AdapterIn", "AdapterOut")
+        .whereLayer("AdapterIn").mayOnlyBeAccessedByLayers("Config")
+        .whereLayer("AdapterOut").mayOnlyBeAccessedByLayers("Config", "AdapterIn", "Domain")
 
         .ignoreDependency(belongToAnyOf(TurnosYreservasApp.class), alwaysTrue())
         .ignoreDependency(alwaysTrue(), belongToAnyOf(
