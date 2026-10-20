@@ -43,7 +43,6 @@ public class ApplicationProperties {
     public static class CatalogService {
 
         private String baseUrl = "http://localhost:8081";
-        private String serviceJwt = "";
 
         public String getBaseUrl() {
             return baseUrl;
@@ -51,14 +50,6 @@ public class ApplicationProperties {
 
         public void setBaseUrl(String baseUrl) {
             this.baseUrl = baseUrl;
-        }
-
-        public String getServiceJwt() {
-            return serviceJwt;
-        }
-
-        public void setServiceJwt(String serviceJwt) {
-            this.serviceJwt = serviceJwt;
         }
     }
     // jhipster-needle-application-properties-property-class

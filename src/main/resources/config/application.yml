@@ -251,4 +251,3 @@ catedra:
 application:
   catalog-service:
     base-url: ${CATALOG_SERVICE_URL:http://localhost:8081}
-    service-jwt: ${CATALOG_SERVICE_JWT:}

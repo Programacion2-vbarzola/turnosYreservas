@@ -57,6 +57,7 @@ local.properties
 *.orig
 classes/
 out/
+!src/**/adapter/out/
 
 ######################
 # Visual Studio Code
