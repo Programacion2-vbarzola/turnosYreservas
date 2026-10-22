@@ -194,6 +194,8 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
             return ErrorConstants.ERR_VALIDATION;
         } else if (err instanceof ConcurrencyFailureException || err.getCause() instanceof ConcurrencyFailureException) {
             return ErrorConstants.ERR_CONCURRENCY_FAILURE;
+        } else if (err instanceof ar.edu.um.prog2.turnosyreservas.domain.service.ProfessionalNotFoundException) {
+            return "error.PROFESSIONAL_NOT_FOUND";
         }
         return null;
     }
