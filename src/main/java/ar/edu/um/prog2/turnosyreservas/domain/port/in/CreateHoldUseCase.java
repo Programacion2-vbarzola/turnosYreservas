@@ -7,5 +7,5 @@ import java.time.LocalTime;
 
 public interface CreateHoldUseCase {
     record HoldCreatedResult(Long holdId, Long reservationProcessId, String status, Instant expiresAt) {}
-    HoldCreatedResult createHold(Long professionalId, LocalDate date, LocalTime startTime, User user);
+    HoldCreatedResult createHold(Long professionalId, LocalDate date, LocalTime startTime, User user, String externalPatienId);
 }
