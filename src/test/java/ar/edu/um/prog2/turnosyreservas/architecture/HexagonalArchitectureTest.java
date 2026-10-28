@@ -20,38 +20,58 @@ class HexagonalArchitectureTest {
         classes = new ClassFileImporter().withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS).importPackages(BASE_PACKAGE);
     }
 
+    // ── Feature-first checks (availability/) ─────────────────────────────────
+
     @Test
-    void domain_no_depende_de_adapters() {
+    void availability_domain_no_depende_de_infrastructure() {
         ArchRule rule = noClasses()
             .that()
-            .resideInAnyPackage("..domain.port..", "..domain.service..")
+            .resideInAnyPackage("..availability.domain..", "..availability.application..")
             .should()
             .dependOnClassesThat()
-            .resideInAPackage("..adapter..");
+            .resideInAPackage("..availability.infrastructure..");
 
         rule.check(classes);
     }
 
+    // ── Feature-first checks (hold/) ─────────────────────────────────────────
+
     @Test
-    void adapters_in_no_depende_de_adapters_out() {
+    void hold_domain_no_depende_de_infrastructure() {
         ArchRule rule = noClasses()
             .that()
-            .resideInAPackage("..adapter.in..")
+            .resideInAnyPackage("..hold.domain..", "..hold.application..")
             .should()
             .dependOnClassesThat()
-            .resideInAPackage("..adapter.out..");
+            .resideInAPackage("..hold.infrastructure..");
 
         rule.check(classes);
     }
 
+    // ── Feature-first checks (reservation/) ──────────────────────────────────
+
     @Test
-    void adapters_out_no_depende_de_adapters_in() {
+    void reservation_domain_no_depende_de_infrastructure() {
         ArchRule rule = noClasses()
             .that()
-            .resideInAPackage("..adapter.out..")
+            .resideInAnyPackage("..reservation.domain..", "..reservation.application..")
             .should()
             .dependOnClassesThat()
-            .resideInAPackage("..adapter.in..");
+            .resideInAPackage("..reservation.infrastructure..");
+
+        rule.check(classes);
+    }
+
+    // ── Feature-first checks (user/) ──────────────────────────────────────────
+
+    @Test
+    void user_domain_no_depende_de_infrastructure() {
+        ArchRule rule = noClasses()
+            .that()
+            .resideInAnyPackage("..user.domain..", "..user.application..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAPackage("..user.infrastructure..");
 
         rule.check(classes);
     }

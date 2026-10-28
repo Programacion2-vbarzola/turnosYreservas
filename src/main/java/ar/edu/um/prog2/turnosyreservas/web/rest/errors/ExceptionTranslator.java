@@ -87,14 +87,17 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
 
     private ProblemDetailWithCause getProblemDetailWithCause(Throwable ex) {
         if (
-            ex instanceof ar.edu.um.prog2.turnosyreservas.service.UsernameAlreadyUsedException
-        ) return (ProblemDetailWithCause) new LoginAlreadyUsedException().getBody();
+            ex instanceof ar.edu.um.prog2.turnosyreservas.user.application.exception.UsernameAlreadyUsedException
+        ) return (ProblemDetailWithCause) new ar.edu.um.prog2.turnosyreservas.user.infrastructure.web.errors.LoginAlreadyUsedException()
+            .getBody();
         if (
-            ex instanceof ar.edu.um.prog2.turnosyreservas.service.EmailAlreadyUsedException
-        ) return (ProblemDetailWithCause) new EmailAlreadyUsedException().getBody();
+            ex instanceof ar.edu.um.prog2.turnosyreservas.user.application.exception.EmailAlreadyUsedException
+        ) return (ProblemDetailWithCause) new ar.edu.um.prog2.turnosyreservas.user.infrastructure.web.errors.EmailAlreadyUsedException()
+            .getBody();
         if (
-            ex instanceof ar.edu.um.prog2.turnosyreservas.service.InvalidPasswordException
-        ) return (ProblemDetailWithCause) new InvalidPasswordException().getBody();
+            ex instanceof ar.edu.um.prog2.turnosyreservas.user.application.exception.InvalidPasswordException
+        ) return (ProblemDetailWithCause) new ar.edu.um.prog2.turnosyreservas.user.infrastructure.web.errors.InvalidPasswordException()
+            .getBody();
 
         if (
             ex instanceof ErrorResponseException exp && exp.getBody() instanceof ProblemDetailWithCause problemDetailWithCause
@@ -194,7 +197,7 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
             return ErrorConstants.ERR_VALIDATION;
         } else if (err instanceof ConcurrencyFailureException || err.getCause() instanceof ConcurrencyFailureException) {
             return ErrorConstants.ERR_CONCURRENCY_FAILURE;
-        } else if (err instanceof ar.edu.um.prog2.turnosyreservas.domain.service.ProfessionalNotFoundException) {
+        } else if (err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.ProfessionalNotFoundException) {
             return "error.PROFESSIONAL_NOT_FOUND";
         }
         return null;

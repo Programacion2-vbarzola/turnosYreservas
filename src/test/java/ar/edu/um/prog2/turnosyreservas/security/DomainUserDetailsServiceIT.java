@@ -4,9 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
 import ar.edu.um.prog2.turnosyreservas.IntegrationTest;
-import ar.edu.um.prog2.turnosyreservas.domain.User;
-import ar.edu.um.prog2.turnosyreservas.repository.UserRepository;
-import ar.edu.um.prog2.turnosyreservas.service.UserService;
+import ar.edu.um.prog2.turnosyreservas.user.application.service.UserService;
+import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.entity.UserEntity;
+import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.repository.UserJpaRepository;
 import java.util.Locale;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +33,7 @@ class DomainUserDetailsServiceIT {
     private static final String USER_THREE_EMAIL = "test-user-three@localhost";
 
     @Autowired
-    private UserRepository userRepository;
+    private UserJpaRepository userJpaRepository;
 
     @Autowired
     private UserService userService;
@@ -42,8 +42,8 @@ class DomainUserDetailsServiceIT {
     @Qualifier("userDetailsService")
     private UserDetailsService domainUserDetailsService;
 
-    public User getUserOne() {
-        User userOne = new User();
+    public UserEntity getUserOne() {
+        UserEntity userOne = new UserEntity();
         userOne.setLogin(USER_ONE_LOGIN);
         userOne.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         userOne.setActivated(true);
@@ -54,8 +54,8 @@ class DomainUserDetailsServiceIT {
         return userOne;
     }
 
-    public User getUserTwo() {
-        User userTwo = new User();
+    public UserEntity getUserTwo() {
+        UserEntity userTwo = new UserEntity();
         userTwo.setLogin(USER_TWO_LOGIN);
         userTwo.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         userTwo.setActivated(true);
@@ -66,8 +66,8 @@ class DomainUserDetailsServiceIT {
         return userTwo;
     }
 
-    public User getUserThree() {
-        User userThree = new User();
+    public UserEntity getUserThree() {
+        UserEntity userThree = new UserEntity();
         userThree.setLogin(USER_THREE_LOGIN);
         userThree.setPassword(RandomStringUtils.insecure().nextAlphanumeric(60));
         userThree.setActivated(false);
@@ -80,9 +80,9 @@ class DomainUserDetailsServiceIT {
 
     @BeforeEach
     void init() {
-        userRepository.save(getUserOne());
-        userRepository.save(getUserTwo());
-        userRepository.save(getUserThree());
+        userJpaRepository.save(getUserOne());
+        userJpaRepository.save(getUserTwo());
+        userJpaRepository.save(getUserThree());
     }
 
     @AfterEach

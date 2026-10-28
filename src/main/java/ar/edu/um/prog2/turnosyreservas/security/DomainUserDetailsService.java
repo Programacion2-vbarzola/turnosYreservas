@@ -1,8 +1,8 @@
 package ar.edu.um.prog2.turnosyreservas.security;
 
-import ar.edu.um.prog2.turnosyreservas.domain.Authority;
-import ar.edu.um.prog2.turnosyreservas.domain.User;
-import ar.edu.um.prog2.turnosyreservas.repository.UserRepository;
+import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.entity.AuthorityEntity;
+import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.entity.UserEntity;
+import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.repository.UserJpaRepository;
 import java.util.*;
 import org.hibernate.validator.internal.constraintvalidators.hv.EmailValidator;
 import org.slf4j.Logger;
@@ -23,10 +23,10 @@ public class DomainUserDetailsService implements UserDetailsService {
 
     private static final Logger LOG = LoggerFactory.getLogger(DomainUserDetailsService.class);
 
-    private final UserRepository userRepository;
+    private final UserJpaRepository userJpaRepository;
 
-    public DomainUserDetailsService(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    public DomainUserDetailsService(UserJpaRepository userJpaRepository) {
+        this.userJpaRepository = userJpaRepository;
     }
 
     @Override
@@ -35,20 +35,20 @@ public class DomainUserDetailsService implements UserDetailsService {
         LOG.debug("Authenticating {}", login);
 
         if (new EmailValidator().isValid(login, null)) {
-            return userRepository
+            return userJpaRepository
                 .findOneWithAuthoritiesByEmailIgnoreCase(login)
                 .map(user -> createSpringSecurityUser(login, user))
                 .orElseThrow(() -> new UsernameNotFoundException("User with email " + login + " was not found in the database"));
         }
 
         String lowercaseLogin = login.toLowerCase(Locale.ENGLISH);
-        return userRepository
+        return userJpaRepository
             .findOneWithAuthoritiesByLogin(lowercaseLogin)
             .map(user -> createSpringSecurityUser(lowercaseLogin, user))
             .orElseThrow(() -> new UsernameNotFoundException("User " + lowercaseLogin + " was not found in the database"));
     }
 
-    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, User user) {
+    private org.springframework.security.core.userdetails.User createSpringSecurityUser(String lowercaseLogin, UserEntity user) {
         if (!user.isActivated()) {
             throw new UserNotActivatedException("User " + lowercaseLogin + " was not activated");
         }
@@ -78,11 +78,11 @@ public class DomainUserDetailsService implements UserDetailsService {
             return super.hashCode();
         }
 
-        public static UserWithId fromUser(User user) {
+        public static UserWithId fromUser(UserEntity user) {
             return new UserWithId(
                 user.getLogin(),
                 user.getPassword(),
-                user.getAuthorities().stream().map(Authority::getName).map(SimpleGrantedAuthority::new).toList(),
+                user.getAuthorities().stream().map(AuthorityEntity::getName).map(SimpleGrantedAuthority::new).toList(),
                 user.getId()
             );
         }

@@ -4,7 +4,7 @@ import ar.edu.um.prog2.turnosyreservas.config.SecurityConfiguration;
 import ar.edu.um.prog2.turnosyreservas.config.SecurityJwtConfiguration;
 import ar.edu.um.prog2.turnosyreservas.config.WebConfigurer;
 import ar.edu.um.prog2.turnosyreservas.management.SecurityMetersService;
-import ar.edu.um.prog2.turnosyreservas.web.rest.AuthenticateController;
+import ar.edu.um.prog2.turnosyreservas.user.infrastructure.web.AuthenticateController;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
