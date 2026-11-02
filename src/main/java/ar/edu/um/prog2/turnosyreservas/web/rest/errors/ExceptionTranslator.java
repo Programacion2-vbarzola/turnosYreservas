@@ -199,6 +199,14 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
             return ErrorConstants.ERR_CONCURRENCY_FAILURE;
         } else if (err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.ProfessionalNotFoundException) {
             return "error.PROFESSIONAL_NOT_FOUND";
+        } else if (err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.HoldNotFoundException) {
+            return "error.HOLD_NOT_FOUND";
+        } else if (err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.HoldExpiredException) {
+            return "error.HOLD_EXPIRED";
+        } else if (err instanceof ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessNotFoundException) {
+            return "error.PROCESS_NOT_FOUND";
+        } else if (err instanceof ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessOwnerMismatchException) {
+            return "error.PROCESS_OWNER_MISMATCH";
         }
         return null;
     }
@@ -223,6 +231,18 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         if (err instanceof AccessDeniedException) return HttpStatus.FORBIDDEN;
         if (err instanceof ConcurrencyFailureException) return HttpStatus.CONFLICT;
         if (err instanceof BadCredentialsException) return HttpStatus.UNAUTHORIZED;
+        if (err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.HoldNotFoundException) return HttpStatus.NOT_FOUND;
+        if (err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.HoldExpiredException) return HttpStatus.NOT_FOUND;
+        if (
+            err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.ProfessionalNotFoundException
+        ) return HttpStatus.NOT_FOUND;
+        if (
+            err instanceof ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessNotFoundException
+        ) return HttpStatus.NOT_FOUND;
+        if (
+            err instanceof ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessOwnerMismatchException
+        ) return HttpStatus.FORBIDDEN;
+        if (err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.SlotAlreadyHeldException) return HttpStatus.CONFLICT;
         return null;
     }
 

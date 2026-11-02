@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "turnosYreservas-backend",
+      "runtimeExecutable": "./mvnw",
+      "runtimeArgs": ["spring-boot:run", "-Dspring-boot.run.profiles=dev"],
+      "port": 8082
+    }
+  ]
+}

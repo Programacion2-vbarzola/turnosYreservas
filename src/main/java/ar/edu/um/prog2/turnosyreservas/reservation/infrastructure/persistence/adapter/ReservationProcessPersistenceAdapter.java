@@ -37,4 +37,9 @@ public class ReservationProcessPersistenceAdapter implements ReservationProcessR
     public Optional<ReservationProcess> findByHoldId(Long holdId) {
         return reservationProcessJpaRepository.findByHoldId(holdId).map(reservationProcessEntityMapper::toDomain);
     }
+
+    @Override
+    public Optional<ReservationProcess> findById(Long processId) {
+        return reservationProcessJpaRepository.findById(processId).map(reservationProcessEntityMapper::toDomain);
+    }
 }

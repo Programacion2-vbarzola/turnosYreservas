@@ -6,4 +6,5 @@ import java.util.Optional;
 public interface ReservationProcessRepositoryPort {
     ReservationProcess save(ReservationProcess reservationProcess);
     Optional<ReservationProcess> findByHoldId(Long holdId);
+    Optional<ReservationProcess> findById(Long processId);
 }
