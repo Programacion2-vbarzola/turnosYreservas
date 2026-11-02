@@ -6,6 +6,7 @@ import ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.en
 import ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.mapper.ReservationProcessEntityMapper;
 import ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.repository.ReservationProcessJpaRepository;
 import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.entity.UserEntity;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -30,5 +31,10 @@ public class ReservationProcessPersistenceAdapter implements ReservationProcessR
         entity.setUser(userRef);
         ReservationProcessEntity saved = reservationProcessJpaRepository.save(entity);
         return reservationProcessEntityMapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<ReservationProcess> findByHoldId(Long holdId) {
+        return reservationProcessJpaRepository.findByHoldId(holdId).map(reservationProcessEntityMapper::toDomain);
     }
 }

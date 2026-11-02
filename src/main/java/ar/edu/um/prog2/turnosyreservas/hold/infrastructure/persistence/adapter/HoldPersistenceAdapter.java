@@ -9,6 +9,7 @@ import ar.edu.um.prog2.turnosyreservas.hold.infrastructure.persistence.repositor
 import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.entity.UserEntity;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -40,5 +41,10 @@ public class HoldPersistenceAdapter implements HoldRepositoryPort {
             startTime.toString(),
             HoldStatus.HELD
         );
+    }
+
+    @Override
+    public Optional<Hold> findById(Long holdId) {
+        return holdJpaRepository.findById(holdId).map(holdEntityMapper::toDomain);
     }
 }

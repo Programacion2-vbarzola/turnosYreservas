@@ -82,4 +82,18 @@ public class CatedraRestAdapter implements CatedraAppointmentClient {
         }
         return new HoldResponse(response.externalHoldId(), response.externalProcessId(), response.expiresAt());
     }
+
+    @Override
+    public ConfirmHoldResponse confirmHold(String externalHoldId) {
+        HoldResponseDTO response = restClient
+            .post()
+            .uri("/api/appointment-holds/{id}/confirm", externalHoldId)
+            .header("Authorization", "Bearer " + catedraJwt)
+            .retrieve()
+            .body(HoldResponseDTO.class);
+        if (response == null) {
+            throw new IllegalStateException("Empty response from catedra when confirming hold: " + externalHoldId);
+        }
+        return new ConfirmHoldResponse(response.expiresAt());
+    }
 }

@@ -6,6 +6,7 @@ import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.entity.Us
 import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.entity.UserProfileEntity;
 import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.mapper.UserProfileEntityMapper;
 import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.repository.UserProfileJpaRepository;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -27,5 +28,11 @@ public class UserProfilePersistenceAdapter implements UserProfileRepositoryPort 
         entity.setUser(userRef);
         UserProfileEntity saved = userProfileJpaRepository.save(entity);
         return userProfileEntityMapper.toDomain(saved);
+    }
+
+    //clase para buscar un user con el id
+    @Override
+    public Optional<UserProfile> findByUserId(Long userId) {
+        return userProfileJpaRepository.findByUserId(userId).map(userProfileEntityMapper::toDomain);
     }
 }

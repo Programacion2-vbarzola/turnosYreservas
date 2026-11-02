@@ -7,4 +7,5 @@ public enum HoldStatus {
     HELD,
     EXPIRED,
     CANCELLED,
+    CONFIRMED,
 }

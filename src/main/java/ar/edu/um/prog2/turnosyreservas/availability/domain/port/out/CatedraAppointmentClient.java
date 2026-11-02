@@ -10,4 +10,6 @@ public interface CatedraAppointmentClient {
     List<Occupancy> getOccupancies(Long professionalId, LocalDate from, LocalDate to);
     record HoldResponse(String externalHoldId, String externalProcessId, Instant expiresAt) {}
     HoldResponse createHold(Long professionalId, LocalDate date, LocalTime startTime, String externalPatientId);
+    record ConfirmHoldResponse(Instant expiresAt) {}
+    ConfirmHoldResponse confirmHold(String externalHoldId);
 }

@@ -59,6 +59,7 @@ public class UserPersistenceAdapter implements UserRepositoryPort {
     }
 
     @Override
+    @org.springframework.transaction.annotation.Transactional(readOnly = true)
     public Optional<User> findOneWithAuthoritiesByLogin(String login) {
         return userJpaRepository.findOneWithAuthoritiesByLogin(login).map(userEntityMapper::toDomain);
     }

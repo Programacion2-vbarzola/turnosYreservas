@@ -29,59 +29,81 @@ Ambos backends deben seguir esta estructura de paquetes. El dominio no puede ten
 ```
 src/main/java/com/vbarzola/{servicio}/
 │
-├── domain/
-│   ├── model/           ← entidades de dominio puras (sin @Entity ni @Component)
-│   ├── port/
-│   │   ├── in/          ← interfaces de casos de uso (lo que el dominio expone hacia afuera)
-│   │   └── out/         ← interfaces de lo que el dominio necesita (persistencia, APIs externas)
-│   └── service/         ← implementaciones de los casos de uso (lógica de negocio)
+├── {feature}/                   ← una carpeta por feature (ej: professional, schedule, sync, user)
+│   ├── domain/
+│   │   ├── model/               ← POJOs puros (sin @Entity, sin @Component)
+│   │   └── ports/               ← plural "ports"
+│   │       ├── in/              ← una interface por caso de uso
+│   │       └── out/             ← sin sufijo "Port" (ej: ProfessionalRepository)
+│   ├── application/
+│   │   ├── service/             ← facade @Service: delega a los use cases (no implementa port in)
+│   │   ├── usecases/            ← una clase @Component por caso de uso (implementa port in)
+│   │   └── exception/           ← XxxException extends RuntimeException
+│   └── infrastructure/
+│       ├── persistence/
+│       │   ├── entity/          ← @Entity con anotaciones JPA (separadas del modelo de dominio)
+│       │   ├── mapper/          ← @Component manual: toEntity() / toDomainModel()
+│       │   ├── repository/      ← JpaXxxRepository extends JpaRepository<XxxEntity, Long>
+│       │   └── adapter/         ← JpaXxxRepositoryAdapter implements port out
+│       └── web/
+│           ├── controller/      ← XxxController: inyecta XxxService + XxxDtoMapper
+│           ├── dto/             ← XxxRequest (entrada) + XxxResponse (salida) — separados
+│           └── mapper/          ← @Component manual: toDomain(Request) / toResponse(Domain)
 │
-├── adapter/
-│   ├── in/
-│   │   ├── rest/        ← controllers REST (adaptadores de entrada)
-│   │   └── kafka/       ← consumers Kafka (adaptadores de entrada)
-│   └── out/
-│       ├── persistence/ ← implementaciones JPA de los puertos de salida de persistencia
-│       ├── catedra/     ← cliente REST hacia el servicio de cátedra
-│       ├── catalog/     ← cliente REST hacia Repo 2 (solo en Repo 3)
-│       └── kafka/       ← producers Kafka (adaptadores de salida)
-│
-└── config/              ← configuración Spring, beans, seguridad
+└── config/                      ← configuración Spring, beans, seguridad
 ```
 
 ### Reglas que deben cumplirse (verificadas con ArchUnit):
 
-1. Nada en `domain/` puede importar clases de `adapter/`
-2. Nada en `adapter/in/` puede importar clases de `adapter/out/` (ni viceversa)
-3. Los adaptadores de entrada solo llaman a interfaces de `domain/port/in/`
-4. Los adaptadores de salida solo implementan interfaces de `domain/port/out/`
-5. `domain/service/` solo usa `domain/model/` y `domain/port/out/` — nunca implementaciones concretas
+1. Nada en `{feature}.domain` puede importar clases de `{feature}.infrastructure`
+2. Nada en `{feature}.application` puede importar clases de `{feature}.infrastructure`
+3. Nada en `infrastructure.web` puede importar clases de `infrastructure.persistence`
+4. Los use case impls (`application.usecases`) solo usan `domain.ports.out` — nunca implementaciones concretas
+5. Los port out trabajan con modelos de dominio (`domain.model`) — nunca con `@Entity`
 
 ### Verificación con ArchUnit
 
 Ambos repos deben tener una clase de test `HexagonalArchitectureTest` que use la librería **ArchUnit** para verificar estas reglas automáticamente. Esta clase de test es obligatoria antes de continuar con Sprint 1 en cada repo.
 
-Ejemplo de test:
+Ejemplo de test (adaptar los nombres de features al repo correspondiente):
 
 ```java
-@AnalyzeClasses(packages = "com.vbarzola.catalogo")
+@AnalyzeClasses(packages = "com.vbarzola.catalogo", importOptions = DoNotIncludeTests.class)
 public class HexagonalArchitectureTest {
 
   @ArchTest
-  static final ArchRule domain_no_depende_de_adapters = noClasses()
+  static final ArchRule domain_no_depende_de_infrastructure = noClasses()
     .that()
-    .resideInAPackage("..domain..")
+    .resideInAnyPackage("..professional.domain..", "..schedule.domain..", "..sync.domain..", "..user.domain..")
     .should()
     .dependOnClassesThat()
-    .resideInAPackage("..adapter..");
+    .resideInAnyPackage(
+      "..professional.infrastructure..",
+      "..schedule.infrastructure..",
+      "..sync.infrastructure..",
+      "..user.infrastructure.."
+    );
 
   @ArchTest
-  static final ArchRule adapters_in_no_depende_de_adapters_out = noClasses()
+  static final ArchRule application_no_depende_de_infrastructure = noClasses()
     .that()
-    .resideInAPackage("..adapter.in..")
+    .resideInAnyPackage("..professional.application..", "..schedule.application..", "..sync.application..", "..user.application..")
     .should()
     .dependOnClassesThat()
-    .resideInAPackage("..adapter.out..");
+    .resideInAnyPackage(
+      "..professional.infrastructure..",
+      "..schedule.infrastructure..",
+      "..sync.infrastructure..",
+      "..user.infrastructure.."
+    );
+
+  @ArchTest
+  static final ArchRule web_no_depende_de_persistence = noClasses()
+    .that()
+    .resideInAnyPackage("..infrastructure.web..")
+    .should()
+    .dependOnClassesThat()
+    .resideInAnyPackage("..infrastructure.persistence..", "..infrastructure.external..");
 }
 
 ```
@@ -247,29 +269,25 @@ Responsabilidad: única fuente local vigente de categorías, profesionales y hor
 
   - Una vez, vía Postman.
 
-- **[S0-CAT-5] Refactorizar estructura JHipster a arquitectura hexagonal** 🔴 PENDIENTE — hacer antes de Sprint 1
+- **[S0-CAT-5] Refactorizar estructura JHipster a arquitectura hexagonal** 🔴 PENDIENTE — hacer antes de Sprint 3
 
-  - Reorganizar los paquetes generados por JHipster a la estructura hexagonal definida arriba.
-  - La estructura JHipster default (`domain/`, `service/`, `repository/`, `web/rest/`) debe quedar como:
-    - `domain/model/` — entidades de dominio sin anotaciones de persistencia
-    - `domain/port/in/` — interfaces de casos de uso (ej: `SyncCatalogUseCase`, `SearchProfessionalsUseCase`)
-    - `domain/port/out/` — interfaces de persistencia y clientes externos (ej: `ProfessionalRepository`, `CatedraRestClient`, `RedisClient`)
-    - `domain/service/` — implementaciones de los casos de uso
-    - `adapter/in/rest/` — controllers REST (lo que KMP y Repo 3 consumen)
-    - `adapter/in/kafka/` — consumer de `CatalogUpdated`
-    - `adapter/out/persistence/` — implementaciones JPA
-    - `adapter/out/catedra/` — cliente REST hacia la cátedra
-    - `adapter/out/redis/` — cliente Redis para sync incremental
-  - El código generado por JHipster para usuarios/seguridad puede mantenerse en `config/` sin refactorizar — solo se aplica hexagonal a la lógica de catálogo.
+  - Plan detallado en `REFACTOR_HEXAGONAL.md` (en la raíz del repo). Seguir ese documento fase a fase.
+  - La estructura JHipster default (`domain/`, `service/`, `repository/`, `web/rest/`) se reemplaza por una organización por **features**, cada una con capas internas `domain/`, `application/` e `infrastructure/`:
+    - Features: `professional/`, `schedule/`, `sync/`, `user/`
+    - Cada feature sigue la estructura definida en la sección de arquitectura hexagonal arriba
+    - Convenciones clave: `ports` (plural), port out sin sufijo "Port", facade en `application/service/`, impls en `application/usecases/`, entidades JPA en `infrastructure/persistence/entity/`, adapters en `infrastructure/persistence/adapter/`, controllers en `infrastructure/web/controller/`
+    - Los mappers son `@Component` manuales (no MapStruct)
+    - Los DTOs web se dividen en `XxxRequest` + `XxxResponse` separados
+  - Orden de fases: FASE 1 (professional) → FASE 2 (schedule) → FASE 3 (sync) → FASE 4 (user) → FASE 5 (limpieza)
   - Dependencia: Ninguna.
 
-- **[S0-CAT-6] Test de verificación de arquitectura hexagonal con ArchUnit** 🔴 PENDIENTE — hacer antes de Sprint 1
+- **[S0-CAT-6] Test de verificación de arquitectura hexagonal con ArchUnit** 🔴 PENDIENTE — hacer antes de Sprint 3
   - Agregar dependencia ArchUnit al `pom.xml`.
   - Crear clase `HexagonalArchitectureTest` con las reglas descritas en la sección de arquitectura hexagonal de este documento.
-  - El test debe pasar en verde antes de continuar con Sprint 1. Si falla, corregir S0-CAT-5 hasta que pase.
+  - El test debe pasar en verde antes de continuar con Sprint 3. Si falla, corregir S0-CAT-5 hasta que pase.
   - Dependencia: Ninguna (depende de S0-CAT-5).
 
-### Sprint 1 — Seguridad base y contrato propio hacia afuera
+### Sprint 1 — Seguridad base y contrato propio hacia afuera ✅ COMPLETADO
 
 > Todos los issues de este sprint y en adelante deben seguir la estructura hexagonal. Cada nuevo caso de uso → nuevo puerto de entrada. Cada nueva integración externa → nuevo puerto de salida + adaptador.
 
@@ -287,39 +305,40 @@ Responsabilidad: única fuente local vigente de categorías, profesionales y hor
   - Endpoints que expone este servicio hacia Repo 1 y Repo 3.
   - Dependencia: Ninguna.
 
-### Sprint 2 — Sincronización completa
+### Sprint 2 — Sincronización completa ✅ COMPLETADO
 
 - **[S2-CAT-1] Puerto de salida: cliente REST contra cátedra (snapshot)**
 
-  - Interfaz: `CatedraSnapshotClient` en `domain/port/out/`
-  - Implementación: `CatedraSnapshotRestAdapter` en `adapter/out/catedra/`
-  - Caso de uso: `SyncFullCatalogUseCase` en `domain/port/in/`
-  - Lógica: `SyncFullCatalogService` en `domain/service/`
+  - Interfaz: `CatedraSnapshotClient` en `sync/domain/ports/out/`
+  - Implementación: `CatedraSnapshotRestAdapter` en `sync/infrastructure/external/catedra/`
+  - Caso de uso: `SyncFullCatalogUseCase` en `sync/domain/ports/in/`
+  - Lógica: `SyncFullCatalogUseCaseImpl` en `sync/application/usecases/` + facade `CatalogSyncService` en `sync/application/service/`
   - Dependencia: Ninguna.
 
 - **[S2-CAT-2] Endpoint propio de búsqueda/filtros**
 
-  - Caso de uso: `SearchProfessionalsUseCase`
-  - Adaptador de entrada: controller REST en `adapter/in/rest/`
+  - Caso de uso: `SearchProfessionalsUseCase` en `professional/domain/ports/in/`
+  - Adaptador de entrada: `ProfessionalController` en `professional/infrastructure/web/controller/`
   - Dependencia: Ninguna.
 
 - **[S2-CAT-3] Endpoint propio de horarios vigentes por profesional**
-  - Caso de uso: `GetWeeklySchedulesUseCase`
+  - Caso de uso: `GetAllWeeklySchedulesUseCase` + `GetWeeklySchedulesByProfessionalUseCase` en `schedule/domain/ports/in/`
+  - Adaptador de entrada: `WeeklyScheduleController` en `schedule/infrastructure/web/controller/`
   - Dependencia: Ninguna.
 
-### Sprint 3 — Sincronización incremental
+### Sprint 3 — Sincronización incremental 🔴 NO INICIADO — completar S0-CAT-5 y S0-CAT-6 primero
 
 - **[S3-CAT-1] Adaptador de entrada Kafka: consumer `CatalogUpdated`**
 
-  - Implementación en `adapter/in/kafka/`
-  - Llama al caso de uso `ProcessCatalogUpdateUseCase`
-  - Deduplicación por `eventId` en `domain/service/`
+  - Implementación: `CatalogKafkaConsumer` en `sync/infrastructure/messaging/`
+  - Llama al caso de uso `ProcessCatalogUpdateUseCase` (en `sync/domain/ports/in/`)
+  - Deduplicación por `eventId` en `sync/application/usecases/`
   - Dependencia: Ninguna.
 
 - **[S3-CAT-2] Puerto de salida Redis + aplicación de cambios incrementales**
 
-  - Interfaz: `CatalogChangesClient` en `domain/port/out/`
-  - Implementación: `RedisAdapter` en `adapter/out/redis/`
+  - Interfaz: `CatalogChangesClient` en `sync/domain/ports/out/`
+  - Implementación: `RedisAdapter` en `sync/infrastructure/redis/`
   - Dependencia: Ninguna.
 
 - **[S3-CAT-3] Detección de discontinuidad y recuperación**
@@ -372,7 +391,7 @@ Responsabilidad: disponibilidad, holds, máquina de estados de reserva, integrac
 
 **Patrón arquitectónico: Hexagonal (Ports & Adapters)**
 
-> Este repo arranca desde cero con hexagonal en mente desde el Sprint 0. No hay código legado que migrar.
+> ⚠️ La estructura base se generó con JHipster en Sprint 0, pero requiere un refactor para seguir exactamente la estructura del repositorio de ejemplo del profesor. Completar **S0-TUR-7** antes de iniciar Sprint 2.
 
 ### Sprint 0 — Scaffolding con arquitectura hexagonal ✅ COMPLETADO
 
@@ -410,8 +429,17 @@ Puerto del servicio: 8082
   - Campo `externalPatientId` en entidad `UserProfile` (OneToOne con `User` de JHipster)
 
 - **[S0-TUR-6] Test de verificación de arquitectura hexagonal con ArchUnit** ✅ COMPLETADO
+
   - `HexagonalArchitectureTest` con 3 reglas pasando en verde
   - `TechnicalStructureTest` de JHipster actualizado con capas `AdapterIn` y `AdapterOut`
+  - ⚠️ NOTA: las reglas verifican la estructura `domain/` → `adapter/`. Deben actualizarse en S0-TUR-7 a los nuevos packages por feature.
+
+- **[S0-TUR-7] Refactorizar a estructura hexagonal del profesor** 🔴 PENDIENTE — hacer antes de continuar Sprint 3
+  - Plan detallado en `REFACTOR_HEXAGONAL.md` (en la raíz del repo). Seguir ese documento fase a fase.
+  - Reorganizar por features (`hold/`, `reservation/`, `user/`) con capas `domain/`, `application/`, `infrastructure/` dentro de cada feature, siguiendo exactamente el patrón del repositorio de ejemplo.
+  - Convenciones clave: `ports` (plural), port out sin sufijo "Port" (`HoldRepository` no `HoldRepositoryPort`), facade en `application/service/`, impls en `application/usecases/`, entidades JPA en `infrastructure/persistence/entity/`, adapters en `infrastructure/persistence/adapter/`.
+  - Actualizar `HexagonalArchitectureTest` para verificar los nuevos packages por feature.
+  - Dependencia: Ninguna.
 
 ### Sprint 1 — Usuarios finales y seguridad base
 
@@ -436,7 +464,7 @@ Puerto del servicio: 8082
   - Origen controlado por variable `CORS_ALLOWED_ORIGINS` en `application.yml`.
   - ⚠️ PENDIENTE: configurar el origen real de KMP cuando se defina la URL de producción.
 
-### Sprint 2 — Disponibilidad
+### Sprint 2 — Disponibilidad ✅ COMPLETADO
 
 - **[S2-TUR-1] Puerto de salida: cliente REST contra cátedra (ocupaciones)**
 
@@ -449,9 +477,9 @@ Puerto del servicio: 8082
   - Adaptador de entrada: controller REST en `adapter/in/rest/`
   - Dependencia: Soft (mockeable) contra Repo 2.
 
-### Sprint 3 — Holds y confirmación inicial
+### Sprint 3 — Holds y confirmación inicial 🔄 EN PROGRESO — completar S0-TUR-7 antes de continuar
 
-- **[S3-TUR-1] Caso de uso: crear hold**
+- **[S3-TUR-1] Caso de uso: crear hold** ✅ COMPLETADO
 
   - `CreateHoldUseCase` — valida contra Repo 2, llama a cátedra, persiste.
   - Adaptadores: `CatedraHoldRestAdapter` en `adapter/out/catedra/`
