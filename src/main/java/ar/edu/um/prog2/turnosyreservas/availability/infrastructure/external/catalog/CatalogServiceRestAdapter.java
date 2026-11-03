@@ -7,9 +7,13 @@ import ar.edu.um.prog2.turnosyreservas.availability.domain.model.ProfessionalInf
 import ar.edu.um.prog2.turnosyreservas.availability.domain.model.ScheduleSlot;
 import ar.edu.um.prog2.turnosyreservas.availability.domain.port.out.CatalogServiceClient;
 import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catalog.dto.ProfessionalResponseDTO;
+import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catalog.dto.WeeklyScheduleResponseDTO;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -80,8 +84,42 @@ public class CatalogServiceRestAdapter implements CatalogServiceClient {
 
     @Override
     public List<ScheduleSlot> getSlotsForDate(Long professionalId, LocalDate date) {
-        // TODO Sprint 2: call Repo 2 catalog snapshot and compute slots for the given date
-        LOG.warn("getSlotsForDate not yet implemented — returning empty list for professional {} on {}", professionalId, date);
-        return List.of();
+        try {
+            WeeklyScheduleResponseDTO[] schedules = restClient
+                .get()
+                .uri("/api/weekly-schedules/by-professional?professionalId={id}", professionalId)
+                .header("Authorization", "Bearer " + mintServiceToken())
+                .retrieve()
+                .body(WeeklyScheduleResponseDTO[].class);
+
+            if (schedules == null) return List.of();
+
+            String targetDay = date.getDayOfWeek().name();
+
+            return Arrays.stream(schedules)
+                .filter(s -> Boolean.TRUE.equals(s.getEnabled()))
+                .filter(s -> targetDay.equals(s.getDayOfWeek()))
+                .flatMap(s -> generateSlots(s).stream())
+                .toList();
+        } catch (Exception e) {
+            LOG.error("Error fetching weekly schedules for professional {} on {}: {}", professionalId, date, e.getMessage());
+            return List.of();
+        }
+    }
+
+    private List<ScheduleSlot> generateSlots(WeeklyScheduleResponseDTO schedule) {
+        List<ScheduleSlot> slots = new ArrayList<>();
+        LocalTime start = LocalTime.parse(schedule.getStartTime());
+        LocalTime end = LocalTime.parse(schedule.getEndTime());
+        int durationMinutes = schedule.getSlotDurationMinutes();
+
+        LocalTime slotStart = start;
+        while (true) {
+            LocalTime slotEnd = slotStart.plusMinutes(durationMinutes);
+            if (slotEnd.isAfter(end)) break;
+            slots.add(new ScheduleSlot(slotStart, slotEnd));
+            slotStart = slotEnd;
+        }
+        return slots;
     }
 }

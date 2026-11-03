@@ -391,7 +391,7 @@ Responsabilidad: disponibilidad, holds, máquina de estados de reserva, integrac
 
 **Patrón arquitectónico: Hexagonal (Ports & Adapters)**
 
-> ⚠️ La estructura base se generó con JHipster en Sprint 0, pero requiere un refactor para seguir exactamente la estructura del repositorio de ejemplo del profesor. Completar **S0-TUR-7** antes de iniciar Sprint 2.
+> ~~⚠️ La estructura base se generó con JHipster en Sprint 0, pero requiere un refactor para seguir exactamente la estructura del repositorio de ejemplo del profesor. Completar **S0-TUR-7** antes de iniciar Sprint 2.~~
 
 ### Sprint 0 — Scaffolding con arquitectura hexagonal ✅ COMPLETADO
 
@@ -434,7 +434,7 @@ Puerto del servicio: 8082
   - `TechnicalStructureTest` de JHipster actualizado con capas `AdapterIn` y `AdapterOut`
   - ⚠️ NOTA: las reglas verifican la estructura `domain/` → `adapter/`. Deben actualizarse en S0-TUR-7 a los nuevos packages por feature.
 
-- **[S0-TUR-7] Refactorizar a estructura hexagonal del profesor** 🔴 PENDIENTE — hacer antes de continuar Sprint 3
+- **[S0-TUR-7] Refactorizar a estructura hexagonal del profesor** ✅ COMPLETADO
   - Plan detallado en `REFACTOR_HEXAGONAL.md` (en la raíz del repo). Seguir ese documento fase a fase.
   - Reorganizar por features (`hold/`, `reservation/`, `user/`) con capas `domain/`, `application/`, `infrastructure/` dentro de cada feature, siguiendo exactamente el patrón del repositorio de ejemplo.
   - Convenciones clave: `ports` (plural), port out sin sufijo "Port" (`HoldRepository` no `HoldRepositoryPort`), facade en `application/service/`, impls en `application/usecases/`, entidades JPA en `infrastructure/persistence/entity/`, adapters en `infrastructure/persistence/adapter/`.
@@ -477,7 +477,7 @@ Puerto del servicio: 8082
   - Adaptador de entrada: controller REST en `adapter/in/rest/`
   - Dependencia: Soft (mockeable) contra Repo 2.
 
-### Sprint 3 — Holds y confirmación inicial 🔄 EN PROGRESO — completar S0-TUR-7 antes de continuar
+### Sprint 3 — Holds y confirmación inicial ✅ COMPLETADO
 
 - **[S3-TUR-1] Caso de uso: crear hold** ✅ COMPLETADO
 
@@ -485,32 +485,35 @@ Puerto del servicio: 8082
   - Adaptadores: `CatedraHoldRestAdapter` en `adapter/out/catedra/`
   - Dependencia: Soft (mockeable) para Repo 2.
 
-- **[S3-TUR-2] Caso de uso: confirmar hold inicialmente**
+- **[S3-TUR-2] Caso de uso: confirmar hold inicialmente** ✅ COMPLETADO
 
-  - `ConfirmHoldUseCase` — llama a cátedra, actualiza estado local.
+  - `ConfirmHoldUseCase` — llama a cátedra, actualiza estado local a `CONFIRMED`, transiciona proceso a `WAITING_FOR_PHONE`.
+  - `POST /api/holds/{holdId}/confirm` → 202 `{ reservationProcessId, status, expiresAt }`
   - Dependencia: Ninguna adicional.
 
-- **[S3-TUR-3] Endpoint propio de estado de proceso**
+- **[S3-TUR-3] Endpoint propio de estado de proceso** ✅ COMPLETADO
   - Para polling desde KMP.
-  - Caso de uso: `GetProcessStatusUseCase`
+  - Caso de uso: `GetProcessStatusUseCase` — valida ownership, devuelve estado actual.
+  - `GET /api/processes/{reservationProcessId}/status` → 200 `{ reservationProcessId, status, expiresAt, message }`
   - Dependencia: Ninguna.
 
-### Sprint 4 — Intercambio asincrónico
+### Sprint 4 — Intercambio asincrónico ✅ COMPLETADO
 
-- **[S4-TUR-1] Adaptador de entrada Kafka: consumer `AdditionalInformationRequested`**
+- **[S4-TUR-1] Adaptador de entrada Kafka: consumer `AdditionalInformationRequested`** ✅ COMPLETADO
 
-  - Implementación en `adapter/in/kafka/`
+  - Implementación en `reservation/infrastructure/persistence/messaging/AppointmentActionsConsumerConfig.java`
   - Llama al caso de uso `ProcessPhoneRequestUseCase`
   - Dependencia: Ninguna.
 
-- **[S4-TUR-2] Caso de uso y endpoint: recibir teléfono**
+- **[S4-TUR-2] Caso de uso y endpoint: recibir teléfono** ✅ COMPLETADO
 
-  - `SubmitPhoneUseCase` — valida formato, persiste.
+  - `SubmitPhoneUseCase` + `SubmitPhoneService` — valida formato, persiste.
+  - `POST /api/processes/{processId}/phone` → 202 `{ reservationProcessId, status }`
   - Dependencia: Ninguna.
 
-- **[S4-TUR-3] Adaptador de salida Kafka: producer `AdditionalInformationSubmitted`**
-  - Interfaz: `AppointmentKafkaProducer` en `domain/port/out/`
-  - Implementación: `KafkaProducerAdapter` en `adapter/out/kafka/`
+- **[S4-TUR-3] Adaptador de salida Kafka: producer `AdditionalInformationSubmitted`** ✅ COMPLETADO
+  - Interfaz: `AppointmentKafkaProducer` en `hold/domain/port/out/`
+  - Implementación: `PhoneSubmittedProducer` en `hold/infrastructure/persistence/messaging/`
   - Dependencia: Ninguna.
 
 ### Sprint 5 — Resultados finales y gestión de reservas

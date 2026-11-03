@@ -11,4 +11,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ReservationProcessJpaRepository extends JpaRepository<ReservationProcessEntity, Long> {
     Optional<ReservationProcessEntity> findByHoldId(Long holdId);
+    Optional<ReservationProcessEntity> findByExternalProcessId(String externalProcessId);
 }

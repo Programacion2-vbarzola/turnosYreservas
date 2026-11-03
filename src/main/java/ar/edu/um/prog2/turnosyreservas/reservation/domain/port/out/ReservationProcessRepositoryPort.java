@@ -7,4 +7,5 @@ public interface ReservationProcessRepositoryPort {
     ReservationProcess save(ReservationProcess reservationProcess);
     Optional<ReservationProcess> findByHoldId(Long holdId);
     Optional<ReservationProcess> findById(Long processId);
+    Optional<ReservationProcess> findByExternalProcessId(String externalProcessId);
 }
