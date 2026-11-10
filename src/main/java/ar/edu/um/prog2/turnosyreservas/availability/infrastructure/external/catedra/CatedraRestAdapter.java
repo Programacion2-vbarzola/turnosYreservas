@@ -84,11 +84,18 @@ public class CatedraRestAdapter implements CatedraAppointmentClient {
     }
 
     @Override
-    public ConfirmHoldResponse confirmHold(String externalHoldId) {
+    public ConfirmHoldResponse confirmHold(
+        String externalHoldId,
+        String patientFirstName,
+        String patientLastName,
+        String externalPatientId
+    ) {
+        record ConfirmHoldRequestDTO(String patientFirstName, String patientLastName, String externalPatientId) {}
         HoldResponseDTO response = restClient
             .post()
             .uri("/api/appointment-holds/{id}/confirm", externalHoldId)
             .header("Authorization", "Bearer " + catedraJwt)
+            .body(new ConfirmHoldRequestDTO(patientFirstName, patientLastName, externalPatientId))
             .retrieve()
             .body(HoldResponseDTO.class);
         if (response == null) {

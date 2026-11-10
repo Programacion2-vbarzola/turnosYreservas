@@ -104,6 +104,10 @@ spring:
           replicationFactor: 1
           auto-create-topics: false
           brokers: ${CATEDRA_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+          configuration:
+            request.timeout.ms: 5000
+            metadata.fetch.timeout.ms: 5000
+            connections.max.idle.ms: 10000
       bindings:
         appointmentActionsConsumer-in-0:
           destination: ${KAFKA_TOPIC_APPOINTMENT_ACTIONS:alumnos.turnos.acciones.changeme}

@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
+//regla para el model implementada en application
 public interface CreateHoldUseCase {
     record HoldCreatedResult(Long holdId, Long reservationProcessId, String status, Instant expiresAt) {}
     HoldCreatedResult createHold(Long professionalId, LocalDate date, LocalTime startTime, User user, String externalPatienId);

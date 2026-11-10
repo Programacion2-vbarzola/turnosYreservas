@@ -32,14 +32,25 @@ class ConfirmHoldService implements ConfirmHoldUseCase {
     }
 
     @Override
-    public ConfirmHoldResult confirmHold(Long holdId, String patientFirstName, String patientLastName, User user) {
+    public ConfirmHoldResult confirmHold(
+        Long holdId,
+        String patientFirstName,
+        String patientLastName,
+        String externalPatientId,
+        User user
+    ) {
         Hold hold = holdRepositoryPort.findById(holdId).orElseThrow(() -> new HoldNotFoundException(holdId));
 
         if (hold.getExpiresAt().isBefore(Instant.now())) {
             throw new HoldExpiredException(holdId);
         }
 
-        CatedraAppointmentClient.ConfirmHoldResponse catedraResponse = catedraAppointmentClient.confirmHold(hold.getExternalHoldId());
+        CatedraAppointmentClient.ConfirmHoldResponse catedraResponse = catedraAppointmentClient.confirmHold(
+            hold.getExternalHoldId(),
+            patientFirstName,
+            patientLastName,
+            externalPatientId
+        );
 
         hold.setStatus(HoldStatus.CONFIRMED);
         holdRepositoryPort.save(hold);

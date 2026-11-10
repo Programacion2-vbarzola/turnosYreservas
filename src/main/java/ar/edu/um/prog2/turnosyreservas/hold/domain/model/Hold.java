@@ -4,10 +4,9 @@ import ar.edu.um.prog2.turnosyreservas.hold.domain.model.enumeration.HoldStatus;
 import java.time.Instant;
 import java.time.LocalDate;
 
-/**
- * Pure domain model for a Hold. No persistence annotations — see
- * {@code hold.infrastructure.persistence.entity.HoldEntity} for the JPA mapping.
- */
+//Importar lombok para getter y setter
+//Modelo para el hold sin anotation de persistencia @Entity. Solo getter y setter
+
 public class Hold {
 
     private Long id;

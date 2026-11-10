@@ -5,5 +5,5 @@ import java.time.Instant;
 
 public interface ConfirmHoldUseCase {
     record ConfirmHoldResult(Long reservationProcessId, String status, Instant expiresAt) {}
-    ConfirmHoldResult confirmHold(Long holdId, String patientFirstName, String patientLastName, User user);
+    ConfirmHoldResult confirmHold(Long holdId, String patientFirstName, String patientLastName, String externalPatientId, User user);
 }

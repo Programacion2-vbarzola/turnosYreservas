@@ -73,10 +73,15 @@ class HoldController {
             .findOneWithAuthoritiesByLogin(login)
             .orElseThrow(() -> new RuntimeException("User not found: " + login));
 
+        var profile = userProfileRepositoryPort
+            .findByUserId(user.getId())
+            .orElseThrow(() -> new RuntimeException("Profile not found for user: " + login));
+
         ConfirmHoldUseCase.ConfirmHoldResult result = confirmHoldUseCase.confirmHold(
             holdId,
             request.patientFirstName(),
             request.patientLastName(),
+            profile.getExternalPatientId(),
             user
         );
 

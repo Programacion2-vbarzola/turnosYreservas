@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 @Service
 class CreateHoldService implements CreateHoldUseCase {
 
+    //encapsulamiento
     private final CatalogServiceClient catalogServiceClient;
     private final CatedraAppointmentClient catedraAppointmentClient;
     private final HoldRepositoryPort holdRepositoryPort;
