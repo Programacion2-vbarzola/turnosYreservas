@@ -12,4 +12,5 @@ public interface CatedraAppointmentClient {
     HoldResponse createHold(Long professionalId, LocalDate date, LocalTime startTime, String externalPatientId);
     record ConfirmHoldResponse(Instant expiresAt) {}
     ConfirmHoldResponse confirmHold(String externalHoldId, String patientFirstName, String patientLastName, String externalPatientId);
+    void cancelAppointment(String externalProcessId, String reason);
 }

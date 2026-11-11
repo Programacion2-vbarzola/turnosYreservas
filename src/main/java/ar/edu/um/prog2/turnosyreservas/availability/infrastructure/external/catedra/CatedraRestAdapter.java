@@ -103,4 +103,15 @@ public class CatedraRestAdapter implements CatedraAppointmentClient {
         }
         return new ConfirmHoldResponse(response.expiresAt());
     }
+
+    public void cancelAppointment(String externalProcessId, String reason) {
+        record CancelRequestDTO(String reason) {}
+        restClient
+            .post()
+            .uri("/api/appointments/{id}/cancel", externalProcessId)
+            .header("Authorization", "Bearer " + catedraJwt)
+            .body(new CancelRequestDTO(reason))
+            .retrieve()
+            .toBodilessEntity();
+    }
 }
