@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="20261116000001-1" author="sprint6">
+        <createTable tableName="processed_event">
+            <column name="id" type="bigint">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="event_id" type="varchar(255)">
+                <constraints nullable="false" unique="true" uniqueConstraintName="ux_processed_event__event_id"/>
+            </column>
+            <column name="processed_at" type="datetime">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <dropDefaultValue tableName="processed_event" columnName="processed_at" columnDataType="datetime"/>
+    </changeSet>
+
+</databaseChangeLog>
