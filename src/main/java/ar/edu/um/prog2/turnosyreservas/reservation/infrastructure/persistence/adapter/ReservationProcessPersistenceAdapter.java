@@ -1,11 +1,14 @@
 package ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.adapter;
 
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.model.ReservationProcess;
+import ar.edu.um.prog2.turnosyreservas.reservation.domain.model.enumeration.ProcessStatus;
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.out.ReservationProcessRepositoryPort;
 import ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.entity.ReservationProcessEntity;
 import ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.mapper.ReservationProcessEntityMapper;
 import ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.repository.ReservationProcessJpaRepository;
 import ar.edu.um.prog2.turnosyreservas.user.infrastructure.persistence.entity.UserEntity;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 
@@ -46,5 +49,14 @@ public class ReservationProcessPersistenceAdapter implements ReservationProcessR
     @Override
     public Optional<ReservationProcess> findByExternalProcessId(String externalProcessId) {
         return reservationProcessJpaRepository.findByExternalProcessId(externalProcessId).map(reservationProcessEntityMapper::toDomain);
+    }
+
+    @Override
+    public List<ReservationProcess> findByStatusInAndExpiresAtBefore(List<ProcessStatus> statuses, Instant now) {
+        return reservationProcessJpaRepository
+            .findByStatusInAndExpiresAtBefore(statuses, now)
+            .stream()
+            .map(reservationProcessEntityMapper::toDomain)
+            .toList();
     }
 }

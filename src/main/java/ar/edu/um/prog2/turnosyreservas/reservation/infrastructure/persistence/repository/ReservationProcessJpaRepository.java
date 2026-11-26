@@ -1,6 +1,9 @@
 package ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.repository;
 
+import ar.edu.um.prog2.turnosyreservas.reservation.domain.model.enumeration.ProcessStatus;
 import ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.persistence.entity.ReservationProcessEntity;
+import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -12,4 +15,5 @@ import org.springframework.stereotype.Repository;
 public interface ReservationProcessJpaRepository extends JpaRepository<ReservationProcessEntity, Long> {
     Optional<ReservationProcessEntity> findByHoldId(Long holdId);
     Optional<ReservationProcessEntity> findByExternalProcessId(String externalProcessId);
+    List<ReservationProcessEntity> findByStatusInAndExpiresAtBefore(List<ProcessStatus> statuses, Instant now);
 }
