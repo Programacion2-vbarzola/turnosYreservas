@@ -87,7 +87,7 @@ class ReservationController {
     @PreAuthorize("isAuthenticated()")
     ResponseEntity<CancelReservationUseCase.CancelReservationResult> cancelReservation(
         @PathVariable Long reservationProcessId,
-        @RequestBody CancelRequest request
+        @RequestBody(required = false) CancelRequest request
     ) {
         String login = SecurityUtils.getCurrentUserLogin().orElseThrow(() -> new RuntimeException("No authenticated user"));
 
@@ -95,7 +95,8 @@ class ReservationController {
             .findOneWithAuthoritiesByLogin(login)
             .orElseThrow(() -> new RuntimeException("User not found: " + login));
 
-        return ResponseEntity.ok(cancelReservationUseCase.cancelReservation(reservationProcessId, request.reason(), user));
+        String reason = request != null ? request.reason() : null;
+        return ResponseEntity.ok(cancelReservationUseCase.cancelReservation(reservationProcessId, reason, user));
     }
 
     record CancelRequest(String reason) {}

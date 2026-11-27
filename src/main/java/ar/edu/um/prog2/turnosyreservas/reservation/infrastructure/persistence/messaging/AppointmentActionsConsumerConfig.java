@@ -1,7 +1,9 @@
 package ar.edu.um.prog2.turnosyreservas.reservation.infrastructure.messaging;
 
+import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.in.HandleAppointmentCancelledUseCase;
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.in.HandleAppointmentConfirmedUseCase;
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.in.HandleFinalStateUseCase;
+import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.in.HandlePhoneRejectedUseCase;
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.in.ProcessPhoneRequestUseCase;
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.out.ProcessedEventRepositoryPort;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
@@ -20,17 +22,23 @@ public class AppointmentActionsConsumerConfig {
     private final ProcessPhoneRequestUseCase processPhoneRequestUseCase;
     private final HandleAppointmentConfirmedUseCase handleAppointmentConfirmedUseCase;
     private final HandleFinalStateUseCase handleFinalStateUseCase;
+    private final HandleAppointmentCancelledUseCase handleAppointmentCancelledUseCase;
+    private final HandlePhoneRejectedUseCase handlePhoneRejectedUseCase;
     private final ProcessedEventRepositoryPort processedEventRepositoryPort;
 
     public AppointmentActionsConsumerConfig(
         ProcessPhoneRequestUseCase processPhoneRequestUseCase,
         HandleAppointmentConfirmedUseCase handleAppointmentConfirmedUseCase,
         HandleFinalStateUseCase handleFinalStateUseCase,
+        HandleAppointmentCancelledUseCase handleAppointmentCancelledUseCase,
+        HandlePhoneRejectedUseCase handlePhoneRejectedUseCase,
         ProcessedEventRepositoryPort processedEventRepositoryPort
     ) {
         this.processPhoneRequestUseCase = processPhoneRequestUseCase;
         this.handleAppointmentConfirmedUseCase = handleAppointmentConfirmedUseCase;
         this.handleFinalStateUseCase = handleFinalStateUseCase;
+        this.handleAppointmentCancelledUseCase = handleAppointmentCancelledUseCase;
+        this.handlePhoneRejectedUseCase = handlePhoneRejectedUseCase;
         this.processedEventRepositoryPort = processedEventRepositoryPort;
     }
 
@@ -54,9 +62,15 @@ public class AppointmentActionsConsumerConfig {
                     event.externalProcessId(),
                     event.externalReservationId()
                 );
-                case "AdditionalInformationRejected",
-                    "AppointmentProcessExpired",
-                    "AppointmentProcessInvalid" -> handleFinalStateUseCase.handleFinalState(event.externalProcessId(), event.type());
+                case "AdditionalInformationRejected" -> handlePhoneRejectedUseCase.handleRejected(
+                    event.externalProcessId(),
+                    event.expiresAt()
+                );
+                case "AppointmentProcessExpired", "AppointmentProcessInvalid" -> handleFinalStateUseCase.handleFinalState(
+                    event.externalProcessId(),
+                    event.type()
+                );
+                case "AppointmentCancelled" -> handleAppointmentCancelledUseCase.handleCancelled(event.externalProcessId(), event.reason());
                 default -> LOG.warn("Unknown appointment action event type: {}", event.type());
             }
         };
@@ -67,6 +81,8 @@ public class AppointmentActionsConsumerConfig {
         @JsonProperty("eventId") String eventId,
         @JsonProperty("eventType") String type,
         @JsonProperty("reservationProcessId") String externalProcessId,
-        @JsonProperty("reservationId") Long externalReservationId
+        @JsonProperty("reservationId") Long externalReservationId,
+        @JsonProperty("reason") String reason,
+        @JsonProperty("expiresAt") java.time.Instant expiresAt
     ) {}
 }

@@ -5,4 +5,8 @@ public class HoldNotFoundException extends RuntimeException {
     public HoldNotFoundException(Long holdId) {
         super("Hold not found: " + holdId);
     }
+
+    public HoldNotFoundException(String externalHoldId) {
+        super("Hold not found: " + externalHoldId);
+    }
 }

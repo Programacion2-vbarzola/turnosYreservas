@@ -33,6 +33,11 @@ class HandleAppointmentConfirmedService implements HandleAppointmentConfirmedUse
         ReservationProcess process = reservationProcessRepositoryPort
             .findByExternalProcessId(externalProcessId)
             .orElseThrow(() -> new ProcessNotFoundException(externalProcessId));
+
+        if (process.getStatus() == ProcessStatus.CONFIRMED) {
+            return;
+        }
+
         //COn el objeto que recupero con ese id de proceso guardo los datos de la reserva final
         Reservation reservation = new Reservation();
         reservation.setExternalReservationId(externalReservationId);

@@ -5,4 +5,8 @@ public class ProcessOwnerMismatchException extends RuntimeException {
     public ProcessOwnerMismatchException(Long processId) {
         super("Process does not belong to current user: " + processId);
     }
+
+    public ProcessOwnerMismatchException(String externalProcessId) {
+        super("Process does not belong to current user: " + externalProcessId);
+    }
 }

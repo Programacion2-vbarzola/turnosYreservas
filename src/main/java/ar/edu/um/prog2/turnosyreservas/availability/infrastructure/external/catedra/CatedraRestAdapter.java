@@ -6,6 +6,14 @@ import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.cate
 import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catedra.dto.AppointmentOccupanciesResponseDTO;
 import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catedra.dto.HoldRequestDTO;
 import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catedra.dto.HoldResponseDTO;
+import ar.edu.um.prog2.turnosyreservas.hold.application.exception.HoldExpiredException;
+import ar.edu.um.prog2.turnosyreservas.hold.application.exception.HoldNotFoundException;
+import ar.edu.um.prog2.turnosyreservas.hold.application.exception.ProfessionalNotFoundException;
+import ar.edu.um.prog2.turnosyreservas.hold.application.exception.SlotAlreadyHeldException;
+import ar.edu.um.prog2.turnosyreservas.reservation.application.exception.InvalidProcessStateException;
+import ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessNotFoundException;
+import ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessOwnerMismatchException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Arrays;
@@ -24,13 +32,24 @@ public class CatedraRestAdapter implements CatedraAppointmentClient {
 
     private final RestClient restClient;
     private final String catedraJwt;
+    private final ObjectMapper objectMapper;
 
     public CatedraRestAdapter(
         @Value("${catedra.api.base-url:http://localhost:9090}") String baseUrl,
-        @Value("${catedra.api.jwt:changeme}") String catedraJwt
+        @Value("${catedra.api.jwt:changeme}") String catedraJwt,
+        ObjectMapper objectMapper
     ) {
         this.restClient = RestClient.builder().baseUrl(baseUrl).build();
         this.catedraJwt = catedraJwt;
+        this.objectMapper = objectMapper;
+    }
+
+    private String extractCode(String body) {
+        try {
+            return objectMapper.readTree(body).path("code").asText("UNKNOWN");
+        } catch (Exception e) {
+            return "UNKNOWN";
+        }
     }
 
     @Override
@@ -72,17 +91,26 @@ public class CatedraRestAdapter implements CatedraAppointmentClient {
     @Override
     public HoldResponse createHold(Long professionalId, LocalDate date, LocalTime startTime, String externalPatientId) {
         HoldRequestDTO request = new HoldRequestDTO(professionalId, date, startTime, externalPatientId);
-        HoldResponseDTO response = restClient
-            .post()
-            .uri("/api/appointment-holds")
-            .header("Authorization", "Bearer " + catedraJwt)
-            .body(request)
-            .retrieve()
-            .body(HoldResponseDTO.class);
-        if (response == null) {
-            throw new IllegalStateException("Empty response from catedra service when creating hold");
+        try {
+            HoldResponseDTO response = restClient
+                .post()
+                .uri("/api/appointment-holds")
+                .header("Authorization", "Bearer " + catedraJwt)
+                .body(request)
+                .retrieve()
+                .body(HoldResponseDTO.class);
+            if (response == null) {
+                throw new IllegalStateException("Empty response from catedra service when creating hold");
+            }
+            return new HoldResponse(response.externalHoldId(), response.externalProcessId(), response.expiresAt());
+        } catch (HttpClientErrorException e) {
+            String code = extractCode(e.getResponseBodyAsString());
+            switch (code) {
+                case "SLOT_ALREADY_HELD", "SLOT_ALREADY_RESERVED" -> throw new SlotAlreadyHeldException(professionalId, date, startTime);
+                case "PROFESSIONAL_NOT_FOUND" -> throw new ProfessionalNotFoundException(professionalId);
+                default -> throw e;
+            }
         }
-        return new HoldResponse(response.externalHoldId(), response.externalProcessId(), response.expiresAt());
     }
 
     @Override
@@ -93,28 +121,48 @@ public class CatedraRestAdapter implements CatedraAppointmentClient {
         String externalPatientId
     ) {
         record ConfirmHoldRequestDTO(String patientFirstName, String patientLastName, String externalPatientId) {}
-        HoldResponseDTO response = restClient
-            .post()
-            .uri("/api/appointment-holds/{id}/confirm", externalHoldId)
-            .header("Authorization", "Bearer " + catedraJwt)
-            .body(new ConfirmHoldRequestDTO(patientFirstName, patientLastName, externalPatientId))
-            .retrieve()
-            .body(HoldResponseDTO.class);
-        if (response == null) {
-            throw new IllegalStateException("Empty response from catedra when confirming hold: " + externalHoldId);
+        try {
+            HoldResponseDTO response = restClient
+                .post()
+                .uri("/api/appointment-holds/{id}/confirm", externalHoldId)
+                .header("Authorization", "Bearer " + catedraJwt)
+                .body(new ConfirmHoldRequestDTO(patientFirstName, patientLastName, externalPatientId))
+                .retrieve()
+                .body(HoldResponseDTO.class);
+            if (response == null) {
+                throw new IllegalStateException("Empty response from catedra when confirming hold: " + externalHoldId);
+            }
+            return new ConfirmHoldResponse(response.expiresAt());
+        } catch (HttpClientErrorException e) {
+            String code = extractCode(e.getResponseBodyAsString());
+            switch (code) {
+                case "HOLD_NOT_FOUND" -> throw new HoldNotFoundException(externalHoldId);
+                case "HOLD_EXPIRED" -> throw new HoldExpiredException(externalHoldId);
+                case "RESERVATION_PROCESS_ALREADY_CONFIRMED" -> throw new InvalidProcessStateException(externalHoldId, "ALREADY_CONFIRMED");
+                default -> throw e;
+            }
         }
-        return new ConfirmHoldResponse(response.expiresAt());
     }
 
     public void cancelAppointment(String externalProcessId, String reason) {
         record CancelRequestDTO(String reason) {}
-        restClient
-            .post()
-            .uri("/api/appointments/{id}/cancel", externalProcessId)
-            .header("Authorization", "Bearer " + catedraJwt)
-            .body(new CancelRequestDTO(reason))
-            .retrieve()
-            .toBodilessEntity();
+        try {
+            restClient
+                .post()
+                .uri("/api/appointments/{id}/cancel", externalProcessId)
+                .header("Authorization", "Bearer " + catedraJwt)
+                .body(new CancelRequestDTO(reason))
+                .retrieve()
+                .toBodilessEntity();
+        } catch (HttpClientErrorException e) {
+            String code = extractCode(e.getResponseBodyAsString());
+            switch (code) {
+                case "RESERVATION_NOT_FOUND" -> throw new ProcessNotFoundException(externalProcessId);
+                case "RESERVATION_NOT_CANCELLABLE" -> throw new InvalidProcessStateException(externalProcessId, "NOT_CANCELLABLE");
+                case "RESERVATION_OWNER_MISMATCH" -> throw new ProcessOwnerMismatchException(externalProcessId);
+                default -> throw e;
+            }
+        }
     }
 
     @Override

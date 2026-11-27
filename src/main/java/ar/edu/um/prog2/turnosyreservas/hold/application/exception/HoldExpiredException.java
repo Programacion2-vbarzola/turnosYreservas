@@ -5,4 +5,8 @@ public class HoldExpiredException extends RuntimeException {
     public HoldExpiredException(Long holdId) {
         super("Hold expired: " + holdId);
     }
+
+    public HoldExpiredException(String externalHoldId) {
+        super("Hold expired: " + externalHoldId);
+    }
 }

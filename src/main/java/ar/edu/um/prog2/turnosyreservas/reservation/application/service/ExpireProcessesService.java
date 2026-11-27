@@ -24,7 +24,11 @@ class ExpireProcessesService {
     @Scheduled(fixedDelay = 60000)
     @Transactional
     public void expireStaleProcesses() {
-        List<ProcessStatus> nonTerminalStatuses = List.of(ProcessStatus.HELD, ProcessStatus.WAITING_FOR_PHONE);
+        List<ProcessStatus> nonTerminalStatuses = List.of(
+            ProcessStatus.HELD,
+            ProcessStatus.WAITING_FOR_PHONE,
+            ProcessStatus.PHONE_REQUESTED
+        );
         Instant now = Instant.now();
 
         var expired = reservationProcessRepositoryPort.findByStatusInAndExpiresAtBefore(nonTerminalStatuses, now);

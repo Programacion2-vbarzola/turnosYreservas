@@ -25,7 +25,6 @@ class HandleFinalStateService implements HandleFinalStateUseCase {
 
         ProcessStatus newStatus =
             switch (eventType) {
-                case "AdditionalInformationRejected" -> ProcessStatus.REJECTED;
                 case "AppointmentProcessExpired" -> ProcessStatus.EXPIRED;
                 case "AppointmentProcessInvalid" -> ProcessStatus.INVALID;
                 default -> ProcessStatus.FAILED;
