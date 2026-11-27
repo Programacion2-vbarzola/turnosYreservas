@@ -13,4 +13,18 @@ public interface CatedraAppointmentClient {
     record ConfirmHoldResponse(Instant expiresAt) {}
     ConfirmHoldResponse confirmHold(String externalHoldId, String patientFirstName, String patientLastName, String externalPatientId);
     void cancelAppointment(String externalProcessId, String reason);
+
+    record AppointmentItem(
+        String reservationProcessId,
+        Long reservationId,
+        String status,
+        String patientFirstName,
+        String patientLastName,
+        String patientPhone,
+        Instant confirmedAt,
+        Instant cancelledAt,
+        String cancellationReason
+    ) {}
+
+    List<AppointmentItem> listAppointmentsByPatient(String externalPatientId);
 }

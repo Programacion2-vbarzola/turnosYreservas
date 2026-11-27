@@ -1,5 +1,5 @@
 package ar.edu.um.prog2.turnosyreservas.hold.domain.port.out;
 
 public interface AppointmentKafkaProducer {
-    void sendPhone(String externalProcessId, String phoneNumber);
+    void sendPhone(String externalProcessId, String externalHoldId, String requestEventId, String phoneNumber);
 }

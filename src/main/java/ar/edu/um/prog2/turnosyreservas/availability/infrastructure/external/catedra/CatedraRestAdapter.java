@@ -2,11 +2,13 @@ package ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.cat
 
 import ar.edu.um.prog2.turnosyreservas.availability.domain.model.Occupancy;
 import ar.edu.um.prog2.turnosyreservas.availability.domain.port.out.CatedraAppointmentClient;
+import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catedra.dto.AppointmentItemDTO;
 import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catedra.dto.AppointmentOccupanciesResponseDTO;
 import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catedra.dto.HoldRequestDTO;
 import ar.edu.um.prog2.turnosyreservas.availability.infrastructure.external.catedra.dto.HoldResponseDTO;
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.Arrays;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -113,5 +115,40 @@ public class CatedraRestAdapter implements CatedraAppointmentClient {
             .body(new CancelRequestDTO(reason))
             .retrieve()
             .toBodilessEntity();
+    }
+
+    @Override
+    public List<AppointmentItem> listAppointmentsByPatient(String externalPatientId) {
+        try {
+            AppointmentItemDTO[] response = restClient
+                .get()
+                .uri(uriBuilder ->
+                    uriBuilder.path("/api/appointments").queryParam("externalPatientId", externalPatientId).queryParam("size", 50).build()
+                )
+                .header("Authorization", "Bearer " + catedraJwt)
+                .retrieve()
+                .body(AppointmentItemDTO[].class);
+
+            if (response == null) return List.of();
+
+            return Arrays.stream(response)
+                .map(dto ->
+                    new AppointmentItem(
+                        dto.reservationProcessId(),
+                        dto.reservationId(),
+                        dto.status(),
+                        dto.patientFirstName(),
+                        dto.patientLastName(),
+                        dto.patientPhone(),
+                        dto.confirmedAt(),
+                        dto.cancelledAt(),
+                        dto.cancellationReason()
+                    )
+                )
+                .toList();
+        } catch (Exception e) {
+            LOG.error("Error listing appointments for patient {}: {}", externalPatientId, e.getMessage());
+            return List.of();
+        }
     }
 }

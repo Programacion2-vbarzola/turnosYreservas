@@ -207,6 +207,8 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
             return "error.PROCESS_NOT_FOUND";
         } else if (err instanceof ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessOwnerMismatchException) {
             return "error.PROCESS_OWNER_MISMATCH";
+        } else if (err instanceof ar.edu.um.prog2.turnosyreservas.reservation.application.exception.InvalidProcessStateException) {
+            return "error.INVALID_PROCESS_STATE";
         }
         return null;
     }
@@ -242,6 +244,9 @@ public class ExceptionTranslator extends ResponseEntityExceptionHandler {
         if (
             err instanceof ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessOwnerMismatchException
         ) return HttpStatus.FORBIDDEN;
+        if (
+            err instanceof ar.edu.um.prog2.turnosyreservas.reservation.application.exception.InvalidProcessStateException
+        ) return HttpStatus.CONFLICT;
         if (err instanceof ar.edu.um.prog2.turnosyreservas.hold.application.exception.SlotAlreadyHeldException) return HttpStatus.CONFLICT;
         return null;
     }

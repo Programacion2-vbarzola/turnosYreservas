@@ -5,6 +5,7 @@ import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.in.HandleFinalSta
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.in.ProcessPhoneRequestUseCase;
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.out.ProcessedEventRepositoryPort;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +46,10 @@ public class AppointmentActionsConsumerConfig {
             processedEventRepositoryPort.save(event.eventId());
 
             switch (event.type()) {
-                case "AdditionalInformationRequested" -> processPhoneRequestUseCase.processPhoneRequest(event.externalProcessId());
+                case "AdditionalInformationRequested" -> processPhoneRequestUseCase.processPhoneRequest(
+                    event.externalProcessId(),
+                    event.eventId()
+                );
                 case "AppointmentConfirmed" -> handleAppointmentConfirmedUseCase.handleConfirmed(
                     event.externalProcessId(),
                     event.externalReservationId()
@@ -58,7 +62,11 @@ public class AppointmentActionsConsumerConfig {
         };
     }
 
-    //Usamos para externalReservationID un objeto Long porque es nullable y el record se usa para todos los tipos de eventos.
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record AppointmentActionEvent(String eventId, String type, String externalProcessId, Long externalReservationId) {}
+    public record AppointmentActionEvent(
+        @JsonProperty("eventId") String eventId,
+        @JsonProperty("eventType") String type,
+        @JsonProperty("reservationProcessId") String externalProcessId,
+        @JsonProperty("reservationId") Long externalReservationId
+    ) {}
 }

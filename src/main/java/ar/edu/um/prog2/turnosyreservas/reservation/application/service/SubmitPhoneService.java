@@ -1,6 +1,9 @@
 package ar.edu.um.prog2.turnosyreservas.reservation.application.service;
 
+import ar.edu.um.prog2.turnosyreservas.hold.domain.model.Hold;
 import ar.edu.um.prog2.turnosyreservas.hold.domain.port.out.AppointmentKafkaProducer;
+import ar.edu.um.prog2.turnosyreservas.hold.domain.port.out.HoldRepositoryPort;
+import ar.edu.um.prog2.turnosyreservas.reservation.application.exception.InvalidProcessStateException;
 import ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessExpiredException;
 import ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessNotFoundException;
 import ar.edu.um.prog2.turnosyreservas.reservation.application.exception.ProcessOwnerMismatchException;
@@ -10,19 +13,23 @@ import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.in.SubmitPhoneUse
 import ar.edu.um.prog2.turnosyreservas.reservation.domain.port.out.ReservationProcessRepositoryPort;
 import ar.edu.um.prog2.turnosyreservas.user.domain.model.User;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Service;
 
 @Service
 class SubmitPhoneService implements SubmitPhoneUseCase {
 
     private final ReservationProcessRepositoryPort reservationProcessRepositoryPort;
+    private final HoldRepositoryPort holdRepositoryPort;
     private final AppointmentKafkaProducer appointmentKafkaProducer;
 
     SubmitPhoneService(
         ReservationProcessRepositoryPort reservationProcessRepositoryPort,
+        HoldRepositoryPort holdRepositoryPort,
         AppointmentKafkaProducer appointmentKafkaProducer
     ) {
         this.reservationProcessRepositoryPort = reservationProcessRepositoryPort;
+        this.holdRepositoryPort = holdRepositoryPort;
         this.appointmentKafkaProducer = appointmentKafkaProducer;
     }
 
@@ -40,12 +47,27 @@ class SubmitPhoneService implements SubmitPhoneUseCase {
             throw new ProcessExpiredException(process.getExternalProcessId());
         }
 
+        if (process.getStatus() != ProcessStatus.PHONE_REQUESTED) {
+            throw new InvalidProcessStateException(process.getExternalProcessId(), process.getStatus().name());
+        }
+
+        Instant now = Instant.now();
         process.setPhoneNumber(phoneNumber);
         process.setStatus(ProcessStatus.PHONE_SUBMITTED);
-        process.setUpdatedAt(Instant.now());
+        process.setExpiresAt(now.plus(10, ChronoUnit.MINUTES));
+        process.setUpdatedAt(now);
         reservationProcessRepositoryPort.save(process);
 
-        appointmentKafkaProducer.sendPhone(process.getExternalProcessId(), phoneNumber);
+        Hold hold = holdRepositoryPort
+            .findById(process.getHoldId())
+            .orElseThrow(() -> new IllegalStateException("Hold not found for process: " + processId));
+
+        appointmentKafkaProducer.sendPhone(
+            process.getExternalProcessId(),
+            hold.getExternalHoldId(),
+            process.getRequestEventId(),
+            phoneNumber
+        );
 
         return new PhoneSubmittedResult(process.getId(), ProcessStatus.PHONE_SUBMITTED.name());
     }

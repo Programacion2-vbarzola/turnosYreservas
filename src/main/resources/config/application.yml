@@ -251,6 +251,7 @@ catedra:
   api:
     base-url: ${CATEDRA_API_URL:http://localhost:9090}
     jwt: ${CATEDRA_JWT:changeme}
+    group-id: ${CATEDRA_GROUP_ID:valentin-barzola}
 
 application:
   catalog-service:

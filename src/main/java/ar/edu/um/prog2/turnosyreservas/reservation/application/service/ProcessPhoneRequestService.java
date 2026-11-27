@@ -19,7 +19,7 @@ class ProcessPhoneRequestService implements ProcessPhoneRequestUseCase {
     }
 
     @Override
-    public void processPhoneRequest(String externalProcessId) {
+    public void processPhoneRequest(String externalProcessId, String requestEventId) {
         ReservationProcess process = reservationProcessRepositoryPort
             .findByExternalProcessId(externalProcessId)
             .orElseThrow(() -> new ProcessNotFoundException(externalProcessId));
@@ -29,6 +29,7 @@ class ProcessPhoneRequestService implements ProcessPhoneRequestUseCase {
         }
 
         process.setStatus(ProcessStatus.PHONE_REQUESTED);
+        process.setRequestEventId(requestEventId);
         process.setUpdatedAt(Instant.now());
         reservationProcessRepositoryPort.save(process);
     }
